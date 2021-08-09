@@ -1,0 +1,439 @@
+---
+title: "Distribuições Probabilísticas Comuns"
+author: "Carlos H. Passos"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+  pdf_document: default
+---
+```{r, message=FALSE}
+library(tidyverse)
+library(rmarkdown)
+```
+
+## Distribuição de Bernoulli
+A distribuição de Bernoulli é uma distribuição probabilística que surge quando nós fazemos um experimento que possui **apenas dois resultados possíveis**.  
+Temos como exemplo um experimento de cara ou coroa.  
+Em uma moeda qualquer, a probabilidade de sair cara é _p_, e **esse resultado** é representado pelo número 1.  
+Enquanto que a probabilidade de sair coroa é _(1 - p)_, e **esse resultado** é representado pelo número 0.  
+Chamamos o resultado de _p_ de **sucesso**, e _(1 - p)_ de **fracasso** (sem nenhum juízo de valor quanto às definições de "sucesso" e "fracasso").  
+Numa moeda **justa**, _p_ = 0.05.  
+Resumindo até agora: O resultado ao jogar uma moeda é uma **Variável Aleatória** (que pode assumir os valores 1 (cara) ou 0 (coroa)), e que segue a distribuição de Bernoulli, com probabilidade de sucesso _p_.   
+Seja X a variável aleatória, então escrevemos X ~ Bernoulli(p).  
+
+### Exemplos no R  
+1. Moeda Justa  
+Seja X o resultado de uma moeda justa, com probabilidade de sucesso (X = 1) igual a _p_ = 0.5, então podemos simular esse experimento no R com os comando:
+
+```{r, results='hide'}
+# Utilizando a função sample()
+sample(x = c(0,1), size = 1, prob = c(0.5, 0.5))
+
+#Utilizando a função rbinom()
+rbinom(n = 1, size = 1, prob = 0.5)
+
+```
+
+Se você quiser plotar um gráfico que representa uma distribuição de Bernoulli, podemos fazer o seguinte:
+
+```{r }
+x_bernoulli <- c(0,1) # Resultados do experimento
+p_bernoulli <- c(0.5, 0.5) # Probabilidade de cada resultado
+df_bernoulli <- as_tibble(cbind(x_bernoulli, p_bernoulli)) # Tibble, onde x e p são colunas
+ggplot(df_bernoulli, aes(factor(x_bernoulli), p_bernoulli)) + # Plotando com ggplot
+    geom_col(fill = "dodgerblue", color = "black") +
+    labs(x = "Resultado do Experimento", y = "Probabilidade")
+
+```
+
+2. Moeda Injusta  
+Agora, vamos ver o mesmo experimento utilizando uma moeda injusta.  
+Nesse caso, seja X o resultado dessa moeda, com probabilidade de sucesso (X = 1) de _p_ = 0.75.  
+Podemos fazer as mesmas coisas de antes:
+```{r, results='hide'}
+p <- 0.75
+sample(c(0,1), 1, prob = c((1 - p), p))
+rbinom(n = 1, size = 1, prob = p)
+```
+Fazendo o gráfico de um único experimento dessa moeda injusta:
+
+```{r }
+x_bernoulli <- c(0,1)
+p_bernoulli <- c(0.25, 0.75)
+df_bernoulli <- as_tibble(cbind(x_bernoulli, p_bernoulli))
+ggplot(df_bernoulli, aes(factor(x_bernoulli), p_bernoulli)) +
+    geom_col(fill = "dodgerblue", color = "black") +
+    labs(x = "Resultado do Experimento", y = "Probabilidade")
+```  
+
+Para fechar a Distribuição de Bernoulli, temos:  
+- **Média ou Valor Esperado:** E[X] = x.P(x)  
+- **Variância:** Var(X) = E[(X - E[X])^2] = E[X^2] - E[X^2]  
+Porém, podemos generalizar que, para uma variável aleatória X que segue a distribuição de Bernoulli com probabilidade p (X~Bernoulli(p)), temos que sua média é _p_, e sua variância é _p * (1 - p)_ (Caso vocês queiram conferir, basta substituir os valores nas fórmulas acima).
+
+
+<!-- Nova página (apenas quando PDF)-->
+\newpage 
+
+
+## Distribuição Binomial
+A Distribuição Binomial pode ser interpretada como a soma de uma série de experimentos de Bernoulli. Realize diversos experimentos de Bernoulli e some a quantidade de sucessos que obteve. Pronto! Temos um número (que é uma variável aleatória) que segue a distribuição Binomial.  
+Uma variável aleatória X que segue a distribuição Binomial é caracterizada tanto pela probabilidade de sucesso _p_ (como vimos na distribuição de Bernoulli), quanto pelo **número de experimentos**, representado por _n_.  
+Se X ~ Binomial(n, p), então X é a variável aleatória que representa o número de **sucessos**.  
+A função de probabilidade (chamada de _probability mass function_) de uma distribuição binomial é dada por:  
+
+$$P(X=x) = {{n}\choose{x}} \cdot p^x \cdot (1-p)^{n-x}$$
+Onde:  
+- n: Número de experimentos;  
+- p: Probabilidade de sucesso;  
+- x: Número de sucessos;  
+- n escolhe x: É a seção onde consideramos todos os possíveis jeitos de obtermos x sucessos realizando n experimentos.  
+
+### Exemplos no R  
+No R, temos funções que lidam com a distribuição Binomial.  
+São elas:  
+- dbinom(x, size, prob): Retorna a probabilidade de x sucessos em size experimentos, quando temos uma probabilidade de sucesso igual a prob.  
+- pbinom(q, size, prob):  Retorna a probabilidade **acumulada** (nesse caso, precisa-se pensar em quais caudas da distribuição estamos olhando. Se quisermos a cauda da esquerda, então lower.tail = TRUE; se quisermos a cauda da direita, então lower.tail = FALSE) de **menos que** ou **igual à** q sucessos.
+- rbinom(n, size, prob): Simula n números aleatórios que seguem a distribuição binomial x ~ Binomial(size, prob).  
+- qbinom(p, size, prob): Retorna o quantil que corresponde à menos que ou igual a probabilidade p (para lower.tail = TRUE), ou o quantil que corresponde à mais que ou igual a probabilidade p (para lower.tail = FALSE), de uma distribuição binomial com parâmetros n size e prob. (X ~ Binom(size, prob)).  
+
+
+Vamos explorar diferentes aspectos da distribuição binomial utilizando como base 10 experimentos de moeda com 7 sucessos, considerando que a moeda é justa.  
+O primeiro desses aspectos é em relação à uma probabilidade exata. Qual é a probabilidade de obtermos 7 caras (sucessos) ao jogarmos 10 moedas (assumindo que as moedas são independentes e justas)? Podemos fazer esse cálculo no R de diferentes formas. Vamos vê-las:
+
+```{r}
+n <- 10 # Jogamos 10 moedas
+x <- 7 # Queremos 7 sucessos
+p <- 0.5 # A moeda é justa, então a probabilidade de sucesso é 50%
+
+# A primeira é aplicando a fórmula diretamente
+choose(n, x) * (p^x) * ((1 - p)^(n - x))
+
+# A segunda é utilizando a função dbinom
+dbinom(x = 7, size = 10, prob = 0.5)
+
+ 
+```
+
+Gráfico para a probabilidade de 7 sucessos em 10 jogadas
+```{r}
+# Vamos ver a probabilidade de se obter de 0 a 10 caras individualmente, em 10 jogadas
+tibble(heads = 0:10, # Vetor contendo de 0 a 10 caras
+       prob_sucess = dbinom(x = 0:10, size = 10, prob = 0.5)) %>% # Prob. de se obter de 0 a 10 caras
+    mutate(output = ifelse(heads == 7, "sucesso", "outro")) %>% # Marcando nossa qtd de caras de interesse
+    ggplot(aes(as.factor(heads), prob_sucess)) + # Plotando com ggplot
+    geom_col(aes(fill = output), color = "black") +
+    geom_text(aes(label = round(prob_sucess, 2)))
+```
+
+
+Vamos olhar agora para probabilidades acumuladas. Qual a probabilidade de obtermos **7 ou menos** caras, em 10 jogadas?
+```{r}
+pbinom(q = 7, size = 10, prob = 0.5)
+```
+Gráfico:
+```{r}
+tibble(heads = 0:10,
+       prob_sucess = dbinom(x = 0:10, size = 10, prob = 0.5)) %>%
+    mutate(cum_sum = cumsum(prob_sucess),
+           output = ifelse(heads <= 7, "sucesso", "outro")) %>%
+    ggplot(aes(factor(heads), cum_sum)) +
+    geom_col(aes(fill = output), color = "black") +
+    geom_text(aes(label = round(cum_sum, 2))) +
+    geom_col(aes(factor(heads), prob_sucess), alpha = 0.3)
+```
+
+Vamos ver o outro lado da distribuição. Qual a probabilidade de se obter **7 ou mais** caras quando jogamos 10 moedas justas?
+```{r }
+# Fazendo na unha
+choose(10, 7) * (0.5^7) * (1 - 0.5)^3 + 
+    choose(10, 8) * (0.5^8) * (1 - 0.5)^2 +
+    choose(10, 9) * (0.5^9) * (1 - 0.5)^1 +
+    choose(10, 10) * (0.5^10) * (1 - 0.5)^0
+
+# Fazendo com a função pbinom
+pbinom(q = 6, size = 10, prob = 0.5, lower.tail = FALSE)
+
+# Aqui utilizamos q = 6 pois queremos olhar pra cauda superior. Então começamos a contar a partir do sete, especificando q = 6.
+```
+
+Vamos plotar esse gráfico também
+```{r }
+tibble(heads = 0:10,
+       pmf = dbinom(x = 0:10, size = 10, prob = 0.5),
+       cdf = pbinom(q = -1:9, size = 10, prob = 0.5, lower.tail = FALSE)) %>%
+    mutate(Heads = ifelse(heads >= 7, "sucesso", "outro")) %>%
+    ggplot(aes(factor(heads), cdf, fill = Heads)) +
+    geom_col(color = "black") +
+    geom_text(aes(label = round(cdf, 2)))
+
+```
+
+
+
+## Distribuição Normal
+A distribuição normal é provavelmente a distribuição mais importante para inferência estatística. Muitos fenômenos naturais e biológicos podem ser explicados através do modelo da distribuição normal.  
+A distribuição normal pode ser caracterizada através de dois parâmetros, sendo eles a **média** e a **variância**.  
+Uma variável aleatória X que segue a distribuição normal é representada por X ~N(média, variância).  
+Portanto, há diversas distribuições normais por aí, com diferentes valores para média e variância. Porém, quando se tem uma média igual a 0 e uma variância igual a 1, estamos falando da **distribuição normal padrão**. A distribuição normal padrão é bastante relevante, principalmente quando formos falar de aproximações à curva normal.  
+Variáveis aleatórias que seguem a distribuição normal padrão são chamadas de Z, onde Z~N(0,1).  
+Aqui temos um gráfico com 1000 números aleatórios tirados de uma distribuição normal padrão, em conjunto com a curva normal padrão.  
+
+
+```{r, message=FALSE}
+tibble(normals = rnorm(1000)) %>% #Gerando alguns números aleatórios, onde X ~ N(0,1)
+    ggplot(aes(normals)) + 
+    geom_histogram(aes(y = ..density..), # Plotando em proporção
+                   color = "black",
+                   fill = "dodgerblue") + 
+    stat_function(fun = dnorm,
+                  color = "red",
+                  size = 1) # Plotando a curva normal
+```
+
+### Transformações de X e Z
+Por aí temos diversas variáveis aleatórias que podem ser modeladas de acordo com a ditribuição normal.  
+Uma vez que qualquer distribuição normal é caracterizada apenas pela média e pela variância, é possível **transformar** variáveis aleatórias normais em variáveis aleatórias normais **padrão**.  
+Isso é interessante pois sabemos exatamente qual a distribuição de uma normal padrão. X ~ N(0,1).  
+Uma variavél aleatória normal padrão é normalmente chamada de Z.  
+Se X ~ N(mu, sigma^2), então a conversão entre X e Z é feita de acordo com a seguinte equação:  
+
+Z = (X - mu)/sigma ~ N(0,1)  
+
+X = mu + sigma * Z ~ N(mu, sigma^2)
+
+Então, só precisamos da estimativa da média da amostra, a média da população e seu desvio padrão.  
+Vale ressaltar que, muitas das vezes, a média da população é algo que nós estamos interessados em estudar. Através dessa fórmula, é possível obter a média da população.  
+
+
+
+### Exemplos no R
+### Usando a Variável X Não Transformada
+No R, temos funções que lidam com a distribuição Binomial.  
+São elas:  
+- dnorm(x, mean, sd): A função dnorm é usada para encontrar a função de densidade de probabilidade. Para isso, utiliza um vetor de quantis x, com média mean e desvio padrão sd.  
+- pnorm(q, mean, sd): A função pnorm é utilizada para encontrar a probabilidade associada à um quantil, de uma variável aleatória.  
+- qnorm(p, mean, sd): A função qnorm é utilizada para encontrar o quantil associado à uma determinada probabilidade.  
+- rnorm(n, mean, sd): A função rnorm é utilizada para criar um vetor n de números que seguem a distribuição normal com média mean e desvio padrão sd.  
+
+#### Criando a curva normal com  dnorm()
+Vamos criar uma curva normal de uma distribuição de uma variável qualquer.  
+Média = 105; sd = 5
+X ~ N(105, 5^2)
+```{r}
+#### Distribuição normal qualquer
+media <- 105
+sd <- 5
+medidas <- 75:135
+tibble(numeros = 75:135,
+       probabilidades = dnorm(x = medidas, mean = media, sd = sd)) %>%
+    ggplot(aes(numeros, probabilidades)) +
+    geom_line(size = 1.2) +
+    geom_vline(xintercept = media,
+               color = "red",
+               linetype = "dashed",
+               size = 0.8)
+  
+```  
+
+#### Achando probabilidades associada  à quantis com pnorm()
+Vamos achar a probabilidade associada à um quantil.  
+Suponha uma distribuição normal de uma variável qualquer, com média = 80 e sd = 5.  
+Qual a probabilidade de amostrar um número menor que 75?  
+
+```{r}
+media <- 80
+sd <- 5
+quantil <- 75
+pnorm(q = quantil, mean = media, sd = sd) # Probabilidade
+```  
+
+Plotando:  
+```{r }
+df <- tibble(numeros = 65:95,
+       probabilidades = dnorm(65:95, mean = media, sd = sd))
+# Só plotando para podermos ver o que estamos calculando
+ggplot(df, aes(numeros, probabilidades)) +
+    geom_line(size = 1) +
+    geom_area(aes(numeros, probabilidades),
+              data = filter(df, numeros <= quantil),
+              fill = "red", alpha = 0.4) +
+    geom_vline(xintercept = qnorm(p = pnorm(q = quantil, mean = media, sd = sd),
+                                  mean = media, sd = sd))
+```
+
+Usando a mesma distribuição, qual a probabilidade de amostrar um número maior que 87?
+```{r }
+media <- 80
+sd <- 5
+quantil <- 87
+pnorm(q = quantil, mean = media, sd = sd) # Probabilidade
+```  
+
+Plotando:
+
+```{r }
+df <- tibble(numeros = 65:95,
+             probabilidades = dnorm(65:95, mean = media, sd = sd))
+# Só plotando para podermos ver o que estamos calculando
+ggplot(df, aes(numeros, probabilidades)) +
+    geom_line(size = 1) +
+    geom_area(aes(numeros, probabilidades),
+              data = filter(df, numeros >= quantil),
+              fill = "red", alpha = 0.4) +
+    geom_vline(xintercept = qnorm(p = pnorm(q = quantil, mean = media, sd = sd),
+                                  mean = media, sd = sd))
+```
+
+
+#### Achando quantis associados à uma probabilidade com qnorm()
+Vamos usar ainda a distribuição do exemplo anterior.  
+Qual é o valor da medida onde 79% das observações estão abaixo dela?
+```{r }
+media <- 80
+sd <- 5
+p <- 0.79
+qnorm(p = p, mean = media, sd = sd) # É esse valor
+
+```
+
+Plotando esse quantil específico
+```{r }
+df <- tibble(numeros = 65:95,
+             probabilidades = dnorm(65:95, 80, 5))
+ggplot(df, aes(numeros, probabilidades)) + 
+    geom_line() +
+    geom_area(aes(numeros, probabilidades),
+              data = filter(df, numeros <= qnorm(p = 0.79, mean = 80, sd = 5)),
+              fill = "green", alpha = 0.4) +
+    geom_vline(xintercept = qnorm(p = 0.79, mean = 80, sd = 5),
+               size = 1.5)
+
+```
+
+
+#### Simulando números com rnorm()
+A função rnorm(n, mean, sd) é utilizada para criar distribuições normais, de quaisquer tamanhos n, quaisquer medias mean, e quaisquer desvios padrões sd.  
+No começo dessa seção sobre distribuição normal, eu já criei uma distribuição aleatória.  
+Vamos criar novamente e plotar para o exemplo ficar completo:  
+```{r, message=FALSE}
+set.seed(892)
+tibble(normals = rnorm(1000)) %>%
+    ggplot(aes(normals)) + 
+    geom_histogram(aes(y = ..density..),
+                   color = "black",
+                   fill = "dodgerblue",
+                   alpha = 0.6)
+```  
+
+Podemos, ainda, adicionar a curva normal teórica à essa distribuição:
+```{r, message=FALSE}
+set.seed(892)
+tibble(normals = rnorm(1000)) %>%
+    ggplot(aes(normals)) + 
+    geom_histogram(aes(y = ..density..), 
+                   color = "black",
+                   fill = "dodgerblue",
+                   alpha = 0.6) + 
+    stat_function(fun = dnorm,
+                  color = "red",
+                  size = 1)
+```
+
+### Usando a Variável X Transformada em Z  
+#### Quantis com qnorm()
+Vamos assumir que uma característica de uma população está distribuída de acordo com a normal, sendo que sua média é 30 e desvio padrão 4.7   
+Qual é o 95th quantil dessa população?  
+Em outras palavras, qual é o valor da característica onde 95% da população está abaixo?  
+
+mu + sigma * Z
+30 + 4.7 * 1.645
+
+```{r}
+mu <- 30
+sigma <- 4.7
+qnorm(.95, mean = mu, sd = sigma)
+```
+#### Probabilidades com pnorm()
+Qual é a probabilidade de amostrar um indivíduo com uma medida menor que 27?
+```{r}
+mu <- 30
+sigma <- 4.7
+pnorm(27, mean = mu, sd = sigma)
+```
+
+#### Exemplos manjados
+Considere que o número de cliques em AD's é distribuído normalmente, com média 1020 e sd 50
+Qual é a probabilidade de se obter mais que 1160 cliques em ads em um dia?
+
+Vamos lembrar que:
+Z = (X - mu) / sigma  
+Z = (1160 − 1020) / 50  
+Z = 2.8  
+Portanto, 1160 está à 2.8 desvios padrões da média normal **padrão**.  
+Com isso, nós podemos utilizar o código para achar a probabilidade pedida:
+```{r}
+pnorm(2.8, lower.tail = FALSE)
+```
+
+Considere o exemplo anterior novamente. Qual número de cliques diários em anúncios representaria aquele em que 75% dos dias têm menos cliques?
+```{r}
+qnorm(0.75, mean = 1020, sd = 50)
+```
+
+
+## Distribuição de Poisson
+A distribuição de Poisson é muito útil também, e normalmente é utilizada para modelar contagens.  
+Com contagens eu quero dizer qualquer coisa contável, como número de pessoas que passam em determinado local em um intervalo de tempo, ou qualquer outra contagem.  
+Um atributo importante para a distribuição de Poisson é que podemos modelar contagens que não possuem limites, ou contagens que acontecem em um intervalo de tempo (igual eu mencionei anteriormente).  
+A função de probabilidade associada à Poisson é dada por:  
+
+
+
+Onde x é a contagem de determinada variável (com x = 0,1,2, ...).  
+A distribuição de Poisson tem como parâmetros λ. λ representa a média e também a variância dessa distribuição. Então, X ~ Poisson(λ)  
+Como a distribuição de Poisson pode ser utilizada para contagens ao longo de um tempo (também conhecido como **taxas**), podemos escrever X ∼ Poisson(λt), onde λ = E[X/t] é o número esperado de contagens, em um determinado tempo t.  
+
+
+### Exemplos no R
+O número de pessoas que entram em uma loja é distribuída de acordo com a distribuição de Poisson, com média de 2.5 pessoas por hora.  
+Se observamos essa loja por 4 horas, qual é a probabilidade de que 3 ou menos pessoas apareçam?
+
+```{r}
+n <- 3
+t <- 4
+lambda <- 2.5
+
+ppois(n, lambda = lambda * t)
+```
+Portanto, existe uma chance de 1% de que três ou menos pessoam apareçam na loja.  
+
+
+### Aproximação da Distribuição Poisson com a Distribuição Binomial
+A distribuição de Poisson é extremamente útil não somente por conta dela em si modelar contagens, mas pelo fato de que, se a utilizarmos apropriadamente, podemos fazer com que a Distribuição de Poisson se aproxime da Distribuição Binomial.  
+Esse cenário acontece quando temos um n muito grande e p muito pequeno. Nessa situação, a distribuição de Poisson é aproximadamente uma distribuição Binomial.  
+Se X ~ Binomial(n, p), então X é aproximadamente Poisson, com λ = n * p, sob a premissa de que n é grande o suficiente e p pequeno o suficiente  
+
+#### Exemplo da Aproximação Poisson~Binomial
+Suponha jogamos uma moeda 500 vezes, com probablidade de sucesso igual a 0.01.  
+Qual é a probabilidade de conseguirmos 2 ou menos sucessos?successes?
+
+```{r}
+pbinom(2, size = 500, prob = 0.01)
+
+ppois(2, lambda = 500 * 0.01)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
