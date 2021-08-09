@@ -408,6 +408,12 @@ ppois(n, lambda = lambda * t)
 ```
 Portanto, existe uma chance de 1% de que três ou menos pessoam apareçam na loja.  
 
+#### Funções 
+- dpois: Essa função acha os valores para a função de probabilidade de X.  
+- ppois: Essa é a função de probabilidade cumulativa (Lembrar dos lower.tail = FALSE e lower.tail = TRUE).  
+- qpois: Essa função encontra o quantil associado à uma determinada probabilidade
+- rpois: Essa função gera uma amostra que segue a distribuição de Poisson
+
 
 ### Aproximação da Distribuição Poisson com a Distribuição Binomial
 A distribuição de Poisson é extremamente útil não somente por conta dela em si modelar contagens, mas pelo fato de que, se a utilizarmos apropriadamente, podemos fazer com que a Distribuição de Poisson se aproxime da Distribuição Binomial.  
@@ -424,7 +430,6 @@ pbinom(2, size = 500, prob = 0.01)
 ppois(2, lambda = 500 * 0.01)
 
 ```
-
 
 
 
